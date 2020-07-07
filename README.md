@@ -14,7 +14,7 @@ Creates following files
 
 
 # Download 
-Currently as this is made for testing and learning purpose only we are not pushing it to marketplace. But still you can use it by downloading this file from [github]('./../react-feature-0.0.1.vsix').
+Currently as this is made for testing and learning purpose only we are not pushing it to marketplace. But still you can use it by downloading this file from [github]('./../react-feature-0.0.1.vsix).
 
 - run `code --install-extension react-feature-0.0.1.vsix`
 - Or you can place it on your extension folder
