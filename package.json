@@ -17,9 +17,18 @@
     "commands": [
       {
         "command": "react-feature.createFeature",
-        "title": "Create React Feature"
+        "title": "New Feature (React)"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "react-feature.createFeature",
+          "group": "reactFeatureGroup@1",
+          "when": "explorerResourceIsFolder"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
