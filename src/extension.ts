@@ -14,7 +14,13 @@ import * as changeCase from "change-case";
 import * as mkdirp from "mkdirp";
 import * as path from "path";
 
-import { existsSync, lstatSync, writeFile, appendFile } from "fs";
+import {
+  existsSync,
+  lstatSync,
+  writeFile,
+  appendFile,
+  writeFileSync,
+} from "fs";
 import { downloadDirToExecutablePath } from "vscode-test/out/util";
 
 export const showMessage = (message: string) => {
@@ -33,34 +39,65 @@ export function activate(context: ExtensionContext) {
     "react-feature.createFeature",
     async (uri: Uri) => {
       let featureName = await promptForFeatureName();
+
       showMessage(`selected name is: ${featureName}`);
 
-      let targeDirectory = "";
+      let targetDirectory = "";
+
       try {
-        targeDirectory = await getTargetDirectory(uri);
-        showMessage(`log: target Directory : ${targeDirectory}`);
+        targetDirectory = await getTargetDirectory(uri);
+        showMessage(`log: target Directory : ${targetDirectory}`);
       } catch (error) {
         showError(`error occurred on getting targetDirectory ${error}`);
       }
+
+      const parentDir = "";
 
       // choose file type js/jsx or ts/tsx
       //   const fileType = await promptFileType();
 
       const isTS = true;
 
-      try {
-        await generateFeatureArchitecture(
-          `${featureName}`,
-          targeDirectory,
-          isTS
-        );
+      // try {
+      //   await generateFeatureArchitecture(
+      //     `${featureName}`,
+      //     targetDirectory,
+      //     isTS
+      //   );
 
-        showMessage(`Successfully Generated ${featureName} Feature`);
-      } catch (error) {
-        window.showErrorMessage(
-          `Error:
-			${error instanceof Error ? error.message : JSON.stringify(error)}`
-        );
+      //   showMessage(`Successfully Generated ${featureName} Feature`);
+
+      // } catch (error) {
+      //   window.showErrorMessage(
+      //     `Error:
+      // ${error instanceof Error ? error.message : JSON.stringify(error)}`
+      //   );
+      // }
+
+      // create a directory of that feature name
+      const parentDirPath = `${targetDirectory}/${featureName}`;
+      // if (!existsSync(parentDirPath)) {
+      //   showMessage(`log:: parent directory not made yet`);
+      //   const res = await createDirectory(parentDirPath);
+      //   showMessage(`response here :: ${JSON.stringify(res)}`);
+      // }
+
+      // check target directory
+      // create file path
+      // create file
+      showMessage(`target Dir :: ${targetDirectory}`);
+      if (targetDirectory && featureName) {
+        const f = featureName.toLowerCase();
+        const path = `${parentDirPath}/${f}.tsx`;
+        try {
+          await mkdirp(parentDirPath);
+          if (!existsSync(parentDirPath)) {
+            showError(`Parent Directory not made yet !!`);
+          }
+          writeFileSync(path, "content");
+        } catch (error) {
+          showError(`error on creating file ${JSON.stringify(error)}`);
+        }
       }
     }
   );
@@ -121,20 +158,24 @@ export async function generateFeatureArchitecture(
   isTS: boolean
 ) {
   //create the feature directory if its does not exist yet
-
   //   const featuresDirectoryPath = getFeaturesDirectoryPath(targetDirectory);
+
+  showMessage(`log:: generating feature architecture`);
 
   if (!existsSync(targetDirectory)) {
     showMessage(`target directory ${targetDirectory} not found and creating`);
     await createDirectory(targetDirectory);
   }
 
+  showMessage(`log:: targetDirectory 135 ${targetDirectory}`);
+
   // Create the feature directory
   const featureDirectoryPath = path.join(targetDirectory, featureName);
-  showMessage(`log: featureDirectoryPath : ${featureDirectoryPath}`);
-  console.log({ featureDirectoryPath });
+  showMessage(`log 140: featureDirectoryPath : ${featureDirectoryPath}`);
 
+  showMessage(`log:: creating directory again`);
   await createDirectory(featureDirectoryPath);
+  showMessage(`log::144 directory created`);
 
   // generate code for feature
   await generateBoilerPlateCodeWithFile(
@@ -172,12 +213,12 @@ export function getFeaturesDirectoryPath(currentDirectory: string): string {
   return currentDirectory;
 }
 
-function createDirectory(targetDirectory: string): Promise<void> {
+async function createDirectory(targetDirectory: string): Promise<any> {
   return new Promise((resolve, reject) => {
     try {
       mkdirp(targetDirectory);
       showMessage(`created directory ${targetDirectory}`);
-      resolve();
+      resolve(targetDirectory);
     } catch (error) {
       showError(`error: creating Directory`);
       return reject(error);
@@ -194,7 +235,7 @@ async function generateBoilerPlateCodeWithFile(
   await createFile(featureName, targetDirectory, isTS);
 }
 
-function createFile(
+async function createFile(
   featureName: string,
   targetDirectory: string,
   isTS: boolean
@@ -202,7 +243,12 @@ function createFile(
   //   const paramCaseFeatureName = changeCase.paramCase(featureName.toLowerCase());
   const extension = isTS ? ".tsx" : ".js";
   const targetPath = `${targetDirectory}/${featureName}${extension}`;
-  const fileName = `${featureName}${extension}`;
+
+  // check if target directory is made
+  if (!existsSync(targetDirectory)) {
+    showError(`error:: target directory not found ${targetDirectory}`);
+    await createDirectory(targetDirectory);
+  }
 
   showMessage(`log :: target path ${targetPath}`);
 
@@ -211,18 +257,24 @@ function createFile(
     return;
   }
 
-  return new Promise(async (resolve, reject) => {
-    writeFile(targetPath, getFileTemplate(featureName, isTS), (error) => {
-      if (error) {
-        showError(
-          `error on creating file ${featureName} error ${JSON.stringify(error)}`
-        );
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
+  // return new Promise(async (resolve, reject) => {
+  //   writeFile(targetPath, getFileTemplate(featureName, isTS), (error) => {
+  //     if (error) {
+  //       showError(
+  //         `error on creating file ${featureName} error ${JSON.stringify(error)}`
+  //       );
+  //       reject(error);
+  //       return;
+  //     }
+  //     resolve();
+  //   });
+  // });
+
+  try {
+    writeFileSync(targetPath, "content");
+  } catch (error) {
+    showError(`error on creating file ${JSON.stringify(error)}`);
+  }
 }
 
 export function getFileTemplate(featureName: string, isTS: boolean): string {
