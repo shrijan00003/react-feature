@@ -30,44 +30,52 @@ export function activate(context: ExtensionContext) {
   let disposable = commands.registerCommand(
     "react-feature.createFeature",
     async (uri: Uri) => {
-      let featureName = await promptForFeatureName();
+      const module = await promptForFeatureName();
+      const featureName = module?.split(".")[0];
+      const extension = module?.split(".")[1];
 
       showMessage(`selected name is: ${featureName}`);
 
-      let targetDirectory = "";
-
       try {
-        targetDirectory = await getTargetDirectory(uri);
+        const targetDirectory = await getTargetDirectory(uri);
+        showMessage(`target Dir :: ${targetDirectory}`);
         showMessage(`log: target Directory : ${targetDirectory}`);
+
+        const isTS = "js" === extension ? false : true;
+        const parentDirPath = `${targetDirectory}/${featureName}`;
+
+        if (targetDirectory && featureName) {
+          createFiles(parentDirPath, featureName, isTS);
+        }
       } catch (error) {
         showError(`error occurred on getting targetDirectory ${error}`);
       }
-
-      const isTS = true;
-
-      const parentDirPath = `${targetDirectory}/${featureName}`;
-
-      showMessage(`target Dir :: ${targetDirectory}`);
-
-      if (targetDirectory && featureName) {
-        featureName = changeCase.paramCase(featureName);
-        try {
-          await mkdirp(parentDirPath);
-          if (!existsSync(parentDirPath)) {
-            showError(`Parent Directory not made yet !!`);
-          }
-
-          createFeatureFile(parentDirPath, featureName, isTS);
-          createContextFile(parentDirPath, featureName, isTS);
-          createTypeFile(parentDirPath, featureName, isTS);
-          createStyleFile(parentDirPath, featureName, isTS);
-          createRouteFile(parentDirPath, featureName, isTS);
-        } catch (error) {
-          showError(`error on creating file ${JSON.stringify(error)}`);
-        }
-      }
     }
   );
+
+  const createFiles = async (
+    parentDirPath: string,
+    featureName: string,
+    isTS: boolean
+  ) => {
+    featureName = changeCase.paramCase(featureName);
+
+    try {
+      await mkdirp(parentDirPath);
+
+      if (!existsSync(parentDirPath)) {
+        return showError(`Parent Directory not made yet !!`);
+      }
+
+      createFeatureFile(parentDirPath, featureName, isTS);
+      createContextFile(parentDirPath, featureName, isTS);
+      createTypeFile(parentDirPath, featureName, isTS);
+      createStyleFile(parentDirPath, featureName, isTS);
+      createRouteFile(parentDirPath, featureName, isTS);
+    } catch (error) {
+      showError(`error on creating file ${JSON.stringify(error)}`);
+    }
+  };
 
   context.subscriptions.push(disposable);
 }
@@ -82,6 +90,7 @@ export function createRouteFile(
   const path = `${parentPath}/${f}.route${ext}`;
   createFileSynchronously(path, routeTemplate(featureName));
 }
+
 export function createContextFile(
   parentPath: string,
   featureName: string,
