@@ -8,7 +8,7 @@ export const featureTemplate = (f: string) => {
     import React from 'react';
     import {${Props}} from './${f}.type';
   
-    const ${FeatureName}:React.Fc<${Props}> =() =>{
+    const ${FeatureName}:React.FC<${Props}> =() =>{
       return (
         <div>we are in ${FeatureName} page</div>
       )
